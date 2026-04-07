@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
-
-const HERO_IMG = "https://cdn.poehali.dev/projects/66a18cda-db29-4366-bc2a-646b730b6bd5/files/51dd37f3-f71c-4e39-abd4-5eafdaa5fac0.jpg";
-const VOLUNTEER_IMG = "https://cdn.poehali.dev/projects/66a18cda-db29-4366-bc2a-646b730b6bd5/files/c883dd1b-be5e-45f0-b404-21ca8596a285.jpg";
-const DOG_IMG = "https://cdn.poehali.dev/projects/66a18cda-db29-4366-bc2a-646b730b6bd5/files/8c499ab9-909f-45d2-b36c-1ec3a76830d7.jpg";
+import { publicFetch } from "@/lib/api";
 
 const NAV_LINKS = [
   { id: "home", label: "Главная" },
@@ -14,50 +11,46 @@ const NAV_LINKS = [
   { id: "contacts", label: "Контакты" },
 ];
 
-const ANIMALS = [
-  { id: 1, name: "Рыжик", type: "Кот", age: "2 года", status: "Ищет дом", img: HERO_IMG, desc: "Ласковый и игривый, любит людей. Привит, стерилизован." },
-  { id: 2, name: "Барон", type: "Пёс", age: "3 года", status: "Ищет дом", img: DOG_IMG, desc: "Добрый и послушный. Знает базовые команды. Привит." },
-  { id: 3, name: "Снежок", type: "Кот", age: "1 год", status: "На передержке", img: VOLUNTEER_IMG, desc: "Молодой и активный. Любит играть. Полностью здоров." },
-  { id: 4, name: "Дружок", type: "Пёс", age: "5 лет", status: "Ищет дом", img: DOG_IMG, desc: "Спокойный и верный. Отлично ладит с детьми. Привит." },
-  { id: 5, name: "Луна", type: "Кошка", age: "4 года", status: "На передержке", img: HERO_IMG, desc: "Нежная и тихая. Любит уют и спокойствие. Стерилизована." },
-  { id: 6, name: "Гром", type: "Пёс", age: "2 года", status: "Ищет дом", img: DOG_IMG, desc: "Энергичный и игривый. Нужен активный хозяин. Привит." },
-];
-
-const NEWS = [
-  { id: 1, date: "5 апреля 2026", title: "Выезд на передержку: спасены 4 котёнка", text: "Наш отряд выехал на вызов и забрал четырёх маленьких котят из подвала жилого дома. Все они здоровы и уже нашли временных хозяев." },
-  { id: 2, date: "28 марта 2026", title: "Акция по сбору корма прошла успешно", text: "Благодаря неравнодушным жителям города мы собрали более 200 кг корма для подопечных животных. Огромное спасибо всем участникам!" },
-  { id: 3, date: "15 марта 2026", title: "Барсик и Муся нашли постоянный дом", text: "Радостная новость: два наших давних подопечных наконец-то обрели любящих хозяев. Желаем им долгой и счастливой жизни!" },
-];
-
-const VOLUNTEERS = [
-  { name: "Анна Соколова", role: "Куратор отряда", since: "с 2021 года", icon: "Star" },
-  { name: "Михаил Орлов", role: "Ветеринарный куратор", since: "с 2022 года", icon: "Heart" },
-  { name: "Дарья Лисова", role: "Координатор передержек", since: "с 2022 года", icon: "Home" },
-  { name: "Елена Петрова", role: "SMM и коммуникации", since: "с 2023 года", icon: "MessageCircle" },
-  { name: "Игорь Волков", role: "Транспорт и логистика", since: "с 2023 года", icon: "Car" },
-  { name: "Наталья Зайцева", role: "Фотограф", since: "с 2024 года", icon: "Camera" },
-];
-
-const THANKS = [
-  { name: "Ветклиника «Добрые руки»", type: "Партнёр", contribution: "Бесплатная стерилизация животных" },
-  { name: "Зоомагазин «Мурка»", type: "Спонсор", contribution: "Ежемесячная поставка корма" },
-  { name: "Татьяна Морозова", type: "Меценат", contribution: "Финансовая поддержка лечения" },
-  { name: "Городская Дума", type: "Поддержка", contribution: "Предоставление помещения" },
-  { name: "Александр Новиков", type: "Волонтёр", contribution: "150 выездов за 3 года" },
-  { name: "Семья Красновых", type: "Приёмная семья", contribution: "Взяли под опеку 12 животных" },
-];
-
-const DONATIONS = [
-  { title: "Лечение Грома", current: 8500, target: 15000, desc: "Операция на лапе" },
-  { title: "Корм на апрель", current: 12000, target: 12000, desc: "Ежемесячный сбор" },
-  { title: "Вакцинация котят", current: 3200, target: 8000, desc: "Группа из 10 котят" },
-];
+type Settings = Record<string, string>;
+type Animal = { id: number; name: string; type: string; age: string; status: string; description: string; image_url: string };
+type NewsItem = { id: number; title: string; content: string; published_at: string };
+type Volunteer = { id: number; name: string; role: string; since_year: string; icon: string };
+type Thanks = { id: number; name: string; type: string; contribution: string };
+type Donation = { id: number; title: string; description: string; current_amount: number; target_amount: number };
 
 export default function Index() {
   const [activeSection, setActiveSection] = useState("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [donationAmount, setDonationAmount] = useState<number | null>(null);
   const [donationSuccess, setDonationSuccess] = useState(false);
+
+  const [settings, setSettings] = useState<Settings>({});
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const [thanks, setThanks] = useState<Thanks[]>([]);
+  const [donations, setDonations] = useState<Donation[]>([]);
+  const [contactForm, setContactForm] = useState({ name: "", contact: "", subject: "Хочу взять животное", message: "" });
+  const [contactSent, setContactSent] = useState(false);
+
+  useEffect(() => {
+    publicFetch("settings").then(setSettings).catch(() => {});
+    publicFetch("animals").then(setAnimals).catch(() => {});
+    publicFetch("news").then(setNews).catch(() => {});
+    publicFetch("volunteers").then(setVolunteers).catch(() => {});
+    publicFetch("thanks").then(setThanks).catch(() => {});
+    publicFetch("donations").then(setDonations).catch(() => {});
+  }, []);
+
+  const sendContact = async () => {
+    if (!contactForm.name || !contactForm.contact || !contactForm.message) return;
+    await fetch(`https://functions.poehali.dev/a1235d5d-fc9f-414f-9953-fd585d19336c?route=contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(contactForm),
+    });
+    setContactSent(true);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -94,7 +87,7 @@ export default function Index() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <button onClick={() => scrollTo("home")} className="font-display text-xl font-medium tracking-wide hover:text-accent transition-colors">
-            🐾 Лапа помощи
+            🐾 {settings.site_name || "Лапа помощи"}
           </button>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -144,15 +137,13 @@ export default function Index() {
         <div className="flex-1 grid md:grid-cols-2">
           <div className="flex flex-col justify-center px-8 md:px-16 py-20 md:py-32">
             <p className="text-accent text-sm tracking-widest uppercase mb-4 animate-fade-up opacity-0" style={{animationDelay:"0.1s", animationFillMode:"forwards"}}>
-              Волонтёрский отряд
+              {settings.site_tagline || "Волонтёрский отряд"}
             </p>
             <h1 className="font-display text-5xl md:text-7xl font-light leading-tight mb-6 animate-fade-up opacity-0" style={{animationDelay:"0.2s", animationFillMode:"forwards"}}>
-              Каждый<br />
-              <em className="text-accent">заслуживает</em><br />
-              любви
+              {settings.hero_title || "Каждый заслуживает любви"}
             </h1>
             <p className="text-muted-foreground text-lg leading-relaxed mb-10 max-w-md animate-fade-up opacity-0" style={{animationDelay:"0.3s", animationFillMode:"forwards"}}>
-              Мы помогаем бездомным кошкам и собакам найти заботливых хозяев. Вместе мы делаем мир добрее.
+              {settings.hero_subtitle || "Мы помогаем бездомным кошкам и собакам найти заботливых хозяев."}
             </p>
             <div className="flex flex-wrap gap-4 animate-fade-up opacity-0" style={{animationDelay:"0.4s", animationFillMode:"forwards"}}>
               <button
@@ -170,7 +161,11 @@ export default function Index() {
             </div>
 
             <div className="flex gap-10 mt-16 animate-fade-up opacity-0" style={{animationDelay:"0.5s", animationFillMode:"forwards"}}>
-              {[["320+", "спасённых животных"], ["48", "постоянных волонтёров"], ["5", "лет работы"]].map(([num, label]) => (
+              {[
+                [settings.stat_rescued || "320+", "спасённых животных"],
+                [settings.stat_volunteers || "48", "постоянных волонтёров"],
+                [settings.stat_years || "5", "лет работы"]
+              ].map(([num, label]) => (
                 <div key={label}>
                   <div className="font-display text-3xl font-medium">{num}</div>
                   <div className="text-muted-foreground text-xs mt-1">{label}</div>
@@ -181,7 +176,7 @@ export default function Index() {
 
           <div className="relative overflow-hidden min-h-[400px]">
             <img
-              src={HERO_IMG}
+              src={settings.hero_image || "https://cdn.poehali.dev/projects/66a18cda-db29-4366-bc2a-646b730b6bd5/files/51dd37f3-f71c-4e39-abd4-5eafdaa5fac0.jpg"}
               alt="Животные"
               className="absolute inset-0 w-full h-full object-cover"
             />
@@ -202,20 +197,20 @@ export default function Index() {
               </p>
             </div>
             <div className="space-y-5">
-              {DONATIONS.map((d) => {
-                const pct = Math.min(100, Math.round((d.current / d.target) * 100));
+              {donations.map((d) => {
+                const pct = Math.min(100, Math.round((d.current_amount / d.target_amount) * 100));
                 return (
-                  <div key={d.title}>
+                  <div key={d.id}>
                     <div className="flex justify-between items-baseline mb-2">
                       <span className="font-medium text-sm">{d.title}</span>
-                      <span className="text-primary-foreground/60 text-xs">{d.desc}</span>
+                      <span className="text-primary-foreground/60 text-xs">{d.description}</span>
                     </div>
                     <div className="h-1 rounded-full overflow-hidden mb-1" style={{background:"rgba(255,255,255,0.15)"}}>
                       <div className="h-full rounded-full transition-all duration-1000" style={{width:`${pct}%`, background:"hsl(var(--accent))"}} />
                     </div>
                     <div className="flex justify-between text-xs text-primary-foreground/50">
-                      <span>{d.current.toLocaleString("ru")} ₽</span>
-                      <span>цель {d.target.toLocaleString("ru")} ₽</span>
+                      <span>{d.current_amount.toLocaleString("ru")} ₽</span>
+                      <span>цель {d.target_amount.toLocaleString("ru")} ₽</span>
                     </div>
                   </div>
                 );
@@ -261,7 +256,7 @@ export default function Index() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ANIMALS.map((animal, i) => (
+            {animals.map((animal, i) => (
               <div
                 key={animal.id}
                 className="group bg-card rounded-sm overflow-hidden border border-border hover:shadow-md transition-shadow"
@@ -269,7 +264,7 @@ export default function Index() {
               >
                 <div className="aspect-[4/3] overflow-hidden">
                   <img
-                    src={animal.img}
+                    src={animal.image_url}
                     alt={animal.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -282,8 +277,8 @@ export default function Index() {
                     </span>
                   </div>
                   <p className="text-muted-foreground text-sm mb-1">{animal.type} · {animal.age}</p>
-                  <p className="text-sm leading-relaxed text-foreground/80">{animal.desc}</p>
-                  <button className="mt-4 text-accent text-sm font-medium hover:underline transition-all">
+                  <p className="text-sm leading-relaxed text-foreground/80">{animal.description}</p>
+                  <button onClick={() => scrollTo("contacts")} className="mt-4 text-accent text-sm font-medium hover:underline transition-all">
                     Взять под опеку →
                   </button>
                 </div>
@@ -302,12 +297,12 @@ export default function Index() {
           </div>
 
           <div className="space-y-0">
-            {NEWS.map((item) => (
+            {news.map((item) => (
               <article
                 key={item.id}
                 className="py-8 border-b border-border grid md:grid-cols-[160px_1fr] gap-6 group"
               >
-                <time className="text-muted-foreground text-sm pt-1">{item.date}</time>
+                <time className="text-muted-foreground text-sm pt-1">{item.published_at}</time>
                 <div>
                   <h3 className="font-display text-2xl font-medium mb-3 group-hover:text-accent transition-colors cursor-pointer">
                     {item.title}
@@ -337,9 +332,9 @@ export default function Index() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {VOLUNTEERS.map((v) => (
+            {volunteers.map((v) => (
               <div
-                key={v.name}
+                key={v.id}
                 className="p-6 bg-card border border-border rounded-sm hover:border-accent/40 transition-colors"
               >
                 <div className="w-10 h-10 bg-accent/10 rounded-sm flex items-center justify-center mb-4">
@@ -347,7 +342,7 @@ export default function Index() {
                 </div>
                 <h3 className="font-medium mb-1">{v.name}</h3>
                 <p className="text-accent text-sm mb-1">{v.role}</p>
-                <p className="text-muted-foreground text-xs">{v.since}</p>
+                <p className="text-muted-foreground text-xs">{v.since_year}</p>
               </div>
             ))}
           </div>
@@ -381,9 +376,9 @@ export default function Index() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {THANKS.map((t) => (
+            {thanks.map((t) => (
               <div
-                key={t.name}
+                key={t.id}
                 className="p-6 bg-card border border-border rounded-sm"
               >
                 <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-sm">{t.type}</span>
@@ -412,10 +407,10 @@ export default function Index() {
           <div className="grid md:grid-cols-2 gap-12">
             <div className="space-y-8">
               {[
-                { icon: "Phone", label: "Телефон", value: "+7 (900) 000-00-00" },
-                { icon: "Mail", label: "Email", value: "help@lapapomoshi.ru" },
-                { icon: "MapPin", label: "Адрес", value: "ул. Заботы, 1, г. Москва" },
-                { icon: "Clock", label: "Приёмные часы", value: "Пн–Пт: 10:00–19:00" },
+                { icon: "Phone", label: "Телефон", value: settings.contact_phone || "+7 (900) 000-00-00" },
+                { icon: "Mail", label: "Email", value: settings.contact_email || "help@lapapomoshi.ru" },
+                { icon: "MapPin", label: "Адрес", value: settings.contact_address || "ул. Заботы, 1" },
+                { icon: "Clock", label: "Приёмные часы", value: settings.contact_hours || "Пн–Пт: 10:00–19:00" },
               ].map(item => (
                 <div key={item.label} className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-accent/10 rounded-sm flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -447,45 +442,66 @@ export default function Index() {
 
             <div className="bg-card border border-border rounded-sm p-8">
               <h3 className="font-display text-2xl mb-6">Написать нам</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">Ваше имя</label>
-                  <input
-                    type="text"
-                    className="w-full border border-border bg-background px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-accent transition-colors"
-                    placeholder="Иван Иванов"
-                  />
+              {contactSent ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-3">❤️</div>
+                  <p className="font-display text-xl mb-2">Спасибо за сообщение!</p>
+                  <p className="text-muted-foreground text-sm">Мы свяжемся с вами в ближайшее время.</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">Email или телефон</label>
-                  <input
-                    type="text"
-                    className="w-full border border-border bg-background px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-accent transition-colors"
-                    placeholder="mail@example.com"
-                  />
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-2 block">Ваше имя</label>
+                    <input
+                      type="text"
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                      className="w-full border border-border bg-background px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-accent transition-colors"
+                      placeholder="Иван Иванов"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-2 block">Email или телефон</label>
+                    <input
+                      type="text"
+                      value={contactForm.contact}
+                      onChange={(e) => setContactForm({ ...contactForm, contact: e.target.value })}
+                      className="w-full border border-border bg-background px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-accent transition-colors"
+                      placeholder="mail@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-2 block">Тема</label>
+                    <select
+                      value={contactForm.subject}
+                      onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
+                      className="w-full border border-border bg-background px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-accent transition-colors text-foreground"
+                    >
+                      <option>Хочу взять животное</option>
+                      <option>Стать волонтёром</option>
+                      <option>Помочь материально</option>
+                      <option>Сообщить о животном</option>
+                      <option>Другое</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-2 block">Сообщение</label>
+                    <textarea
+                      rows={4}
+                      value={contactForm.message}
+                      onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                      className="w-full border border-border bg-background px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-accent transition-colors resize-none"
+                      placeholder="Расскажите подробнее..."
+                    />
+                  </div>
+                  <button
+                    onClick={sendContact}
+                    className="w-full bg-accent text-accent-foreground py-3 text-sm font-medium hover:opacity-90 transition-opacity rounded-sm"
+                  >
+                    Отправить сообщение
+                  </button>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">Тема</label>
-                  <select className="w-full border border-border bg-background px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-accent transition-colors text-foreground">
-                    <option>Хочу взять животное</option>
-                    <option>Стать волонтёром</option>
-                    <option>Помочь материально</option>
-                    <option>Сообщить о животном</option>
-                    <option>Другое</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">Сообщение</label>
-                  <textarea
-                    rows={4}
-                    className="w-full border border-border bg-background px-4 py-3 text-sm rounded-sm focus:outline-none focus:border-accent transition-colors resize-none"
-                    placeholder="Расскажите подробнее..."
-                  />
-                </div>
-                <button className="w-full bg-accent text-accent-foreground py-3 text-sm font-medium hover:opacity-90 transition-opacity rounded-sm">
-                  Отправить сообщение
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -495,8 +511,8 @@ export default function Index() {
       <footer className="py-10 border-t border-border bg-primary text-primary-foreground">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <span className="font-display text-lg">🐾 Лапа помощи</span>
-            <span className="text-primary-foreground/40 text-sm">Волонтёрский отряд</span>
+            <span className="font-display text-lg">🐾 {settings.site_name || "Лапа помощи"}</span>
+            <span className="text-primary-foreground/40 text-sm">{settings.site_tagline || "Волонтёрский отряд"}</span>
           </div>
           <div className="flex flex-wrap gap-6 justify-center">
             {NAV_LINKS.map(link => (

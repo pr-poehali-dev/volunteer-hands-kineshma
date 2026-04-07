@@ -1,0 +1,40 @@
+{
+  "tests": [
+    {
+      "name": "GET settings",
+      "method": "GET",
+      "path": "/?route=settings",
+      "expectedStatus": 200,
+      "expectedBody": {"site_name": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET animals",
+      "method": "GET",
+      "path": "/?route=animals",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET news",
+      "method": "GET",
+      "path": "/?route=news",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET volunteers",
+      "method": "GET",
+      "path": "/?route=volunteers",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET donations",
+      "method": "GET",
+      "path": "/?route=donations",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    }
+  ]
+}
